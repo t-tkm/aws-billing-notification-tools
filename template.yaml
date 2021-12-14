@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Notify AWS billing
+
+Globals:
+  Function:
+    Timeout: 30
+
+Parameters:
+  TeamsWebhookUrl:
+    Type: String
+    Default: default-value
+
+Resources:
+  BillingIamRole:
+      Type: AWS::IAM::Role
+      Properties:
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service: lambda.amazonaws.com
+              Action: "sts:AssumeRole"
+        Policies:
+          - PolicyName: "BillingNotificationToTeamsLambdaPolicy"
+            PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - "logs:CreateLogGroup"
+                    - "logs:CreateLogStream"
+                    - "logs:PutLogEvents"
+                    - "ce:GetCostAndUsage"
+                    - "sns:*"
+                  Resource: "*"
+  
+  BillingNotificationFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: aws_billing_app/
+      Handler: app.lambda_handler
+      Runtime: python3.8
+      Environment:
+        Variables:
+          TEAMS_WEBHOOK_URL: !Ref TeamsWebhookUrl
+      Role: !GetAtt BillingIamRole.Arn
+      Events:
+        NotifyTeams:
+          Type: Schedule
+          Properties:
+            Schedule: cron(0 0 * * ? *)
+
+Outputs:
+  BillingNotificationFunction:
+    Description: "Billing Notification Lambda Function ARN"
+    Value: !GetAtt BillingNotificationFunction.Arn
+  BillingNotificationFunctionIamRole:
+    Description: "Implicit IAM Role created for Billing Notification function"
+    Value: !GetAtt BillingIamRole.Arn

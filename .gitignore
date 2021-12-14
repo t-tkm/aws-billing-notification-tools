@@ -1,0 +1,20 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for VSCode
+.history/
+
+# Project
+.aws-sam/
+buildAnddeploy.sh
+packaged.yaml
